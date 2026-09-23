@@ -317,7 +317,6 @@ public class Map4<K, V> extends MapSecondary<K, V> {
         public void remove() {
             throw new UnsupportedOperationException("remove operation not supported");
         }
-        //test
 
     }
 
