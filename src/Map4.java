@@ -2,6 +2,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import components.map.Map;
+import components.map.Map2;
 import components.map.MapSecondary;
 
 /**
@@ -75,10 +76,12 @@ public class Map4<K, V> extends MapSecondary<K, V> {
     private static int mod(int a, int b) {
         assert b > 0 : "Violation of: b > 0";
 
-        // TODO - fill in body
+        int result = a % b;
 
-        // This line added just to make the component compilable.
-        return 0;
+        if (result < 0) {
+            result = result + b;
+        }
+        return result;
     }
 
     /**
@@ -104,8 +107,10 @@ public class Map4<K, V> extends MapSecondary<K, V> {
          */
         this.hashTable = new Map[hashTableSize];
 
-        // TODO - fill in rest of body
-
+        for (int i = 0; i < this.hashTable.length; i++) {
+            this.hashTable[i] = new Map2<K, V>();
+        }
+        this.size = 0;
     }
 
     /*
@@ -117,7 +122,7 @@ public class Map4<K, V> extends MapSecondary<K, V> {
      */
     public Map4() {
 
-        // TODO - fill in body
+        this.createNewRep(DEFAULT_HASH_TABLE_SIZE);
 
     }
 
@@ -131,7 +136,7 @@ public class Map4<K, V> extends MapSecondary<K, V> {
      */
     public Map4(int hashTableSize) {
 
-        // TODO - fill in body
+        this.createNewRep(hashTableSize);
 
     }
 
@@ -159,8 +164,8 @@ public class Map4<K, V> extends MapSecondary<K, V> {
     public final void transferFrom(Map<K, V> source) {
         assert source != null : "Violation of: source is not null";
         assert source != this : "Violation of: source is not this";
-        assert source instanceof Map4<?, ?> : ""
-                + "Violation of: source is of dynamic type Map4<?,?>";
+        assert source instanceof Map4<?, ?>
+                : "" + "Violation of: source is of dynamic type Map4<?,?>";
         /*
          * This cast cannot fail since the assert above would have stopped
          * execution in that case: source must be of dynamic type Map4<?,?>, and
@@ -181,8 +186,11 @@ public class Map4<K, V> extends MapSecondary<K, V> {
         assert key != null : "Violation of: key is not null";
         assert value != null : "Violation of: value is not null";
         assert !this.hasKey(key) : "Violation of: key is not in DOMAIN(this)";
-
-        // TODO - fill in body
+        //find bucket
+        int bucket = mod(key.hashCode(), this.hashTable.length);
+        //add map to bucket
+        this.hashTable[bucket].add(key, value);
+        this.size++;
 
     }
 
@@ -190,21 +198,32 @@ public class Map4<K, V> extends MapSecondary<K, V> {
     public final Pair<K, V> remove(K key) {
         assert key != null : "Violation of: key is not null";
         assert this.hasKey(key) : "Violation of: key is in DOMAIN(this)";
+        int bucket = mod(key.hashCode(), this.hashTable.length);
 
-        // TODO - fill in body
+        Pair<K, V> removed = this.hashTable[bucket].remove(key);
 
-        // This line added just to make the component compilable.
-        return null;
+        this.size--;
+
+        return removed;
+
     }
 
     @Override
     public final Pair<K, V> removeAny() {
         assert this.size() > 0 : "Violation of: this /= empty_set";
 
-        // TODO - fill in body
+        Pair<K, V> removed = null;
 
-        // This line added just to make the component compilable.
-        return null;
+        for (int i = 0; i < this.hashTable.length; i++) {
+
+            if (this.hashTable[i].size() > 0) {
+                removed = this.hashTable[i].removeAny();
+                this.size--;
+                break;
+            }
+        }
+
+        return removed;
     }
 
     @Override
@@ -212,29 +231,28 @@ public class Map4<K, V> extends MapSecondary<K, V> {
         assert key != null : "Violation of: key is not null";
         assert this.hasKey(key) : "Violation of: key is in DOMAIN(this)";
 
-        // TODO - fill in body
+        int bucket = mod(key.hashCode(), this.hashTable.length);
 
-        // This line added just to make the component compilable.
-        return null;
+        return this.hashTable[bucket].value(key);
     }
 
     @Override
     public final boolean hasKey(K key) {
         assert key != null : "Violation of: key is not null";
 
-        // TODO - fill in body
+        boolean flag = false;
+        int bucket = mod(key.hashCode(), this.hashTable.length);
+        if (this.hashTable[bucket].hasKey(key)) {
+            flag = true;
+        }
+        return flag;
 
-        // This line added just to make the component compilable.
-        return false;
     }
 
     @Override
     public final int size() {
 
-        // TODO - fill in body
-
-        // This line added just to make the component compilable.
-        return 0;
+        return this.size;
     }
 
     @Override
@@ -290,16 +308,14 @@ public class Map4<K, V> extends MapSecondary<K, V> {
             this.numberSeen++;
             while (!this.bucketIterator.hasNext()) {
                 this.currentBucket++;
-                this.bucketIterator = Map4.this.hashTable[this.currentBucket]
-                        .iterator();
+                this.bucketIterator = Map4.this.hashTable[this.currentBucket].iterator();
             }
             return this.bucketIterator.next();
         }
 
         @Override
         public void remove() {
-            throw new UnsupportedOperationException(
-                    "remove operation not supported");
+            throw new UnsupportedOperationException("remove operation not supported");
         }
 
     }
